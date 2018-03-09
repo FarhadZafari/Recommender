@@ -27,8 +27,10 @@ class MF(ir.IterativeRec):
         #Initializing matrix P.
         for user in self.Users:
             #temp = 0.1 * (np.random.rand(self.num_factors) - 0.5)
+            l = []
             for factor1 in range(self.num_factors):
-                self.P[(user, factor1)] = random.uniform(0.45,0.55)
+                l.append(random.uniform(0.45,0.55))
+                self.P[user] = np.array(l)
                 #self.P[(user, factor1)] = temp[factor1]
 
         #print(self.P[('id_11610047', 0)])
@@ -36,24 +38,23 @@ class MF(ir.IterativeRec):
         # Initializing matrix Q.
         for job in self.Jobs:
             #temp = 0.1 * (np.random.rand(self.num_factors) - 0.5)
+            l = []
             for factor2 in range(self.num_factors):
-                self.Q[(job, factor2)] = random.uniform(0.45,0.55)
+                l.append(random.uniform(0.45,0.55))
+                self.Q[job] = np.array(l)
+
                 #self.Q[(job, factor2)] = temp[factor2]
 
         #print(self.Q[('id_50417156', 0)])
 
     def predict(self, user_id, job_id):
-        sum = 0
-        for factor in range(self.num_factors):
-            sum = sum + self.P[(user_id,factor)] * self.Q[(job_id,factor)]
-
-        if sum > 1:
+        v = np.dot(self.P[user_id], self.Q[job_id])
+        if v > 1:
             return 1
-        elif sum < 0:
+        elif v < 0:
             return 0
         else:
-            return sum
-
+            return v
 
     def error(self, user_id, job_id):
         return self.real(user_id, job_id) - self.predict(user_id, job_id)
@@ -64,15 +65,22 @@ class MF(ir.IterativeRec):
             for (user,job, value) in self.Users_Jobs_Train:
                 error = self.error(user, job)
                 loss = loss + error * error
-                for factor in range(self.num_factors):
-                    self.P[(user, factor)] = self.P[(user, factor)] + self.learningRate * (error * self.Q[(job, factor)] - self.user_reg * self.P[(user, factor)])
-                    self.Q[(job, factor)] = self.Q[(job, factor)] + self.learningRate * (error * self.P[(user, factor)] - self.job_reg * self.Q[(job, factor)])
-                    loss = loss + (self.user_reg * self.P[(user, factor)] * self.P[(user, factor)]) + (self.job_reg * self.Q[(job, factor)] * self.Q[(job, factor)])
+
+                u_old = self.P[user].copy()
+                v_old = self.Q[job].copy()
+
+                self.P[user] = u_old + self.learningRate * (error * v_old - self.user_reg * u_old)
+                self.Q[job] = v_old + self.learningRate * (error * u_old - self.job_reg * v_old)
+
+                loss = loss + self.user_reg * np.dot(self.P[user], self.P[user]) + self.job_reg * np.dot(self.Q[job], self.Q[job])
             loss = loss / 2
             #print(reps, loss)
 
 #reader = datareader.Read()
-#Users_Jobs, Users_Jobs_Train, Users_Jobs_Test, Users, Jobs = reader.readData()
+#Users_Jobs, Users_Jobs_Train, Users_Jobs_Test, Users, Jobs = reader.readDataCSV()
 #mf = MF(Users_Jobs, Users_Jobs_Train, Users_Jobs_Test, Users, Jobs)
 #mf.train()
+#precision_test_MF, recall_test_MF, accuracy_test_MF = mf.ModelPrecisionRecallAccuracyTest()
+#print(precision_test_MF, recall_test_MF, accuracy_test_MF)
+
 

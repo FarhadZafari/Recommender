@@ -191,6 +191,6 @@ class Read:
 
         return a, b
 
-r = Read()
-users_jobs, users_jobs_train, users_jobs_test, users, jobs  = r.readDataCSV()
-print("done")
+#r = Read()
+#users_jobs, users_jobs_train, users_jobs_test, users, jobs  = r.readDataCSV()
+#print("done")

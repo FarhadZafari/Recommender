@@ -1,6 +1,7 @@
 import MF as mf
 import random
-
+import numpy as np
+import ReadData as datareader
 
 class BMF(mf.MF):
     UserBias = {}
@@ -21,15 +22,17 @@ class BMF(mf.MF):
         self.avg = self.Average()
 
     def predict(self, user_id, job_id):
-        sum = self.avg + self.UserBias[user_id] + self.JobBias[job_id]
-        for factor in range(self.num_factors):
-            sum = sum + self.P[(user_id,factor)] * self.Q[(job_id,factor)]
-        if sum > 1:
+        v = self.avg + self.UserBias[user_id] + self.JobBias[job_id]
+        v = v + np.dot(self.P[user_id], self.Q[job_id])
+        if v > 1:
             return 1
-        elif sum < 0:
+        elif v < 0:
             return 0
         else:
-            return sum
+            return v
+
+    def error(self, user_id, job_id):
+        return self.real(user_id, job_id) - self.predict(user_id, job_id)
 
     def train(self):
         print("Training the model started...")
@@ -47,9 +50,20 @@ class BMF(mf.MF):
                 self.JobBias[job] = self.JobBias[job] + self.learningRate * (error - self.bias_reg * self.JobBias[job])
                 loss = loss + self.bias_reg * self.JobBias[job] * self.JobBias[job]
 
-                for factor in range(self.num_factors):
-                    self.P[(user, factor)] = self.P[(user, factor)] + self.learningRate * (error * self.Q[(job, factor)] - self.user_reg * self.P[(user, factor)])
-                    self.Q[(job, factor)] = self.Q[(job, factor)] + self.learningRate * (error * self.P[(user, factor)] - self.job_reg * self.Q[(job, factor)])
-                    loss = loss + (self.user_reg * self.P[(user, factor)] * self.P[(user, factor)]) + (self.job_reg * self.Q[(job, factor)] * self.Q[(job, factor)])
+                u_old = self.P[user].copy()
+                v_old = self.Q[job].copy()
+
+                self.P[user] = u_old + self.learningRate * (error * v_old - self.user_reg * u_old)
+                self.Q[job] = v_old + self.learningRate * (error * u_old - self.job_reg * v_old)
+
+                loss = loss + self.user_reg * np.dot(self.P[user], self.P[user]) + self.job_reg * np.dot(self.Q[job], self.Q[job])
             loss = loss / 2
             #print(reps, loss)
+
+# reader = datareader.Read()
+# Users_Jobs, Users_Jobs_Train, Users_Jobs_Test, Users, Jobs = reader.readDataCSV()
+# bmf = BMF(Users_Jobs, Users_Jobs_Train, Users_Jobs_Test, Users, Jobs)
+# bmf.train()
+# precision_test_BMF, recall_test_BMF, accuracy_test_BMF = bmf.ModelPrecisionRecallAccuracyTest()
+# print(precision_test_BMF, recall_test_BMF, accuracy_test_BMF)
+

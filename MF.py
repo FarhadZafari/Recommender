@@ -1,19 +1,21 @@
 import ReadData as datareader
 import IterativeRec as ir
 import random
+import numpy as np
 
 
 class MF(ir.IterativeRec):
 
     P = {}
     Q = {}
-    num_factors = 10
+    num_factors = 5
     learningRate = 0.1
     user_reg = 0.1
     job_reg = 0.1
 
     def __init__(self, users_Jobs, users_Jobs_Train, users_Jobs_Test, users, jobs):
         #print("this is the initializer!")
+
         super().__init__(users_Jobs, users_Jobs_Train, users_Jobs_Test, users, jobs)
 
         #print("training: ", self.Users_Jobs_Train)
@@ -23,16 +25,20 @@ class MF(ir.IterativeRec):
         #print("size", len(self.Users_Jobs_Test))
 
         #Initializing matrix P.
-        for factor1 in range(self.num_factors):
-            for user in self.Users:
+        for user in self.Users:
+            #temp = 0.1 * (np.random.rand(self.num_factors) - 0.5)
+            for factor1 in range(self.num_factors):
                 self.P[(user, factor1)] = random.uniform(0.45,0.55)
+                #self.P[(user, factor1)] = temp[factor1]
 
         #print(self.P[('id_11610047', 0)])
 
         # Initializing matrix Q.
-        for factor2 in range(self.num_factors):
-            for job in self.Jobs:
+        for job in self.Jobs:
+            #temp = 0.1 * (np.random.rand(self.num_factors) - 0.5)
+            for factor2 in range(self.num_factors):
                 self.Q[(job, factor2)] = random.uniform(0.45,0.55)
+                #self.Q[(job, factor2)] = temp[factor2]
 
         #print(self.Q[('id_50417156', 0)])
 
@@ -40,6 +46,7 @@ class MF(ir.IterativeRec):
         sum = 0
         for factor in range(self.num_factors):
             sum = sum + self.P[(user_id,factor)] * self.Q[(job_id,factor)]
+
         if sum > 1:
             return 1
         elif sum < 0:
@@ -63,3 +70,9 @@ class MF(ir.IterativeRec):
                     loss = loss + (self.user_reg * self.P[(user, factor)] * self.P[(user, factor)]) + (self.job_reg * self.Q[(job, factor)] * self.Q[(job, factor)])
             loss = loss / 2
             #print(reps, loss)
+
+#reader = datareader.Read()
+#Users_Jobs, Users_Jobs_Train, Users_Jobs_Test, Users, Jobs = reader.readData()
+#mf = MF(Users_Jobs, Users_Jobs_Train, Users_Jobs_Test, Users, Jobs)
+#mf.train()
+

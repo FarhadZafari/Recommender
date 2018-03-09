@@ -7,7 +7,7 @@ import numpy as np
 # Just testing the github.
 #################################################################
 reader = datareader.Read()
-Users_Jobs, Users_Jobs_Train, Users_Jobs_Test, Users, Jobs = reader.readData()
+Users_Jobs, Users_Jobs_Train, Users_Jobs_Test, Users, Jobs = reader.readDataCSV()
 
 BMF_precision = []
 MF_precision = []

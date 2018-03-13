@@ -1,3 +1,5 @@
+import numpy as np
+
 class IterativeRec:
     max_learning_repeats = 20
     Users_Jobs = []
@@ -86,3 +88,36 @@ class IterativeRec:
         precision = TT / (TT + FT)
         accuracy = (TT + FF) / (TT + TF + FT + FF)
         return precision, recall, accuracy
+
+    def ModelUserHit(self):
+        #UserApply = {}
+        UserHit = {}
+        UserAll = {}
+
+        for user in self.Users:
+            #UserApply[user] = set()
+            UserAll[user] = set()
+            UserHit[user] = set()
+
+        for (user, job, value) in self.Users_Jobs_Test:
+            if value == 1:
+                UserAll[user].add(job)
+                if self.predict(user,job) >= 0.5:
+                    #UserApply[user].add(job)
+                    UserHit[user].add(job)
+            if value == 0:
+                UserAll[user].add(job)
+                if self.predict(user, job) < 0.5:
+                    #UserApply[user].add(job)
+                    UserHit[user].add(job)
+
+        #for user in UserAll.keys():
+        #    UserHit[user] = UserAll[user].intersection(UserApply[user])
+
+        HitsList = []
+        for user in self.Users:
+            if len(UserAll[user]) > 0:
+                HitsList.append(len(UserHit[user]) / len(UserAll[user]))
+
+        return np.mean(HitsList)
+

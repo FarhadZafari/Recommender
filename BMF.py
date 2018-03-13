@@ -7,7 +7,7 @@ class BMF(mf.MF):
     UserBias = {}
     JobBias = {}
     avg = 0
-    bias_reg = 0.1
+    bias_reg = 0.01
 
     def __init__(self, users_Jobs, users_Jobs_Train, users_Jobs_Test, users, jobs):
         #print("this is the initializer!")

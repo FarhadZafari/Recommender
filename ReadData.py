@@ -9,14 +9,17 @@ class Read:
     users_jobs = []
     users_jobs_train = []  # A list that includes users as keys and the jobs they have applied for as values (train set).
     users_jobs_test = []  # A list that includes users as keys and the jobs they have applied for as values (Recommender set).
+    users_jobs_train_hash = {}
+    users_jobs_test_hash = {}
     users = set()
     jobs = set()
     split = 0.6
 
     def notinusersjobslist(self, users_jobs, user_id, job_id):
-        if (user_id, job_id) in users_jobs:
-            return 1
-        return 0
+        if users_jobs.get((user_id, job_id)) == 1:
+            return False
+        else:
+            return True
 
     #---------------------------------------------------------------------------------------------
     def readDataJson(self, path = '/Users/fzafari/all.json'):
@@ -42,7 +45,7 @@ class Read:
             user = random.choice(list(self.users))
             job = random.choice(list(self.jobs))
             if self.notinusersjobslist(users_jobs, user, job) == 0:
-                self.users_jobs.append((user, job,0))
+                self.users_jobs.append((user, job, 0))
                 i = i + 1
             else:
                 continue
@@ -99,7 +102,8 @@ class Read:
     #---------------------------------------------------------------------------------------------
 
     # ---------------------------------------------------------------------------------------------
-    def readDataCSV(self, path='/Users/fzafari/sgtrain.txt'):
+    def readDataCSV(self, negativeSampling = True, trainset = 'sgtrain.txt', testset = 'sgtest.txt'):
+        path='/Users/fzafari/'+ trainset
         data = open(path)  # Opening the train dataset.
         i = 0
         for d in data:
@@ -110,10 +114,12 @@ class Read:
             self.users.add(l[0])
             self.jobs.add(l[1])
             self.users_jobs_train.append((l[0], l[1], 1))
+            self.users_jobs_train_hash[(l[0], l[1])] = 1
             i = i + 1
+        print("train dataset loaded!")
 
         i = 0
-        path='/Users/fzafari/sgtest.txt'
+        path='/Users/fzafari/' + testset
         data = open(path)  # Opening the test datasel[0], l[1], 1t.
         for d in data:
             if i == 1000:
@@ -123,53 +129,65 @@ class Read:
             self.users.add(l[0])
             self.jobs.add(l[1])
             self.users_jobs_test.append((l[0], l[1], 1))
+            self.users_jobs_test_hash[(l[0], l[1])] = 1
             i = i + 1
+        print("test dataset loaded!")
 
         num_users = len(self.users)
         num_jobs = len(self.jobs)
+        num_applies_train = len(self.users_jobs_train)
+        num_applies_test = len(self.users_jobs_test)
 
-        num_applies = len(self.users_jobs_train)
-        i = 0
-        while i <= 0.5 * num_applies:
-            user = random.choice(list(self.users))
-            job = random.choice(list(self.jobs))
-            if self.notinusersjobslist(self.users_jobs_train, user, job) == 0:
-                self.users_jobs_train.append((user, job, 0))
-                i = i + 1
-                #print(i)
-            else:
-                continue
+        print("Total number of users:", num_users)
+        print("Total number of jobs:", num_jobs)
+        print("Total number of applies in train set:" + str(len(self.users_jobs_train)))
+        print("Total number of applies in test set:" + str(len(self.users_jobs_test)))
 
-        num_applies = len(self.users_jobs_test)
-        i = 0
-        while i <= 0.5 * num_applies:
-            user = random.choice(list(self.users))
-            job = random.choice(list(self.jobs))
-            if self.notinusersjobslist(self.users_jobs_test, user, job) == 0:
-                self.users_jobs_test.append((user, job, 0))
-                i = i + 1
-                #print(i)
-            else:
-                continue
+        if negativeSampling is True:
+            i = 0
+            while i <= 1 * num_applies_train:
+                user = random.choice(list(self.users))
+                job = random.choice(list(self.jobs))
+                if self.notinusersjobslist(self.users_jobs_train_hash, user, job) is True:
+                    self.users_jobs_train.append((user, job, 0))
+                    i = i + 1
+                else:
+                    continue
+                    print(i)
+            print("train dataset completed!")
 
-        #print(self.users_jobs_train)
-        random.shuffle(self.users_jobs_train)
-        train_file = open('/Users/fzafari/train.txt', 'w')
-        for (user,job,value) in self.users_jobs_train:
-            st = user + ',' + job + ',' + str(value) + '\n'
-            #print(st)
-            train_file.write(st)
+            i = 0
+            while i <= 1 * num_applies_test:
+                user = random.choice(list(self.users))
+                job = random.choice(list(self.jobs))
+                if self.notinusersjobslist(self.users_jobs_test_hash, user, job) is True:
+                    self.users_jobs_test.append((user, job, 0))
+                    i = i + 1
+                else:
+                    continue
+                    print(i)
+            print("test dataset completed!")
 
-        #print(self.users_jobs_test)
-        random.shuffle(self.users_jobs_test)
-        train_file = open('/Users/fzafari/test.txt', 'w')
-        for (user,job,value) in self.users_jobs_test:
-            st = user + ',' + job + ',' + str(value) + '\n'
-            #print(st)
-            train_file.write(st)
+            random.shuffle(self.users_jobs_train)
+            train_file = open('/Users/fzafari/train.txt', 'w')
+            for (user,job,value) in self.users_jobs_train:
+                st = user + ',' + job + ',' + str(value) + '\n'
+                #print(st)
+                train_file.write(st)
+
+            print("writing train dataset completed!")
+
+            random.shuffle(self.users_jobs_test)
+            test_file = open('/Users/fzafari/test.txt', 'w')
+            for (user,job,value) in self.users_jobs_test:
+                st = user + ',' + job + ',' + str(value) + '\n'
+                #print(st)
+                test_file.write(st)
+
+            print("writing test dataset completed!")
 
         self.users_jobs = self.users_jobs_train + self.users_jobs_test
-        #print(self.users_jobs)
+
         #printing number of users and jobs.
         print("Total number of users:", num_users)
         print("Total number of jobs:", num_jobs)
@@ -177,7 +195,6 @@ class Read:
         print("Total number of applies in test set:" + str(len(self.users_jobs_test)))
 
         return self.users_jobs, self.users_jobs_train,self.users_jobs_test, self.users,self.jobs
-
     # ---------------------------------------------------------------------------------------------
 
     def random_split(self, l, a_size):

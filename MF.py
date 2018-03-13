@@ -10,8 +10,8 @@ class MF(ir.IterativeRec):
     Q = {}
     num_factors = 5
     learningRate = 0.1
-    user_reg = 0.1
-    job_reg = 0.1
+    user_reg = 0.01
+    job_reg = 0.01
 
     def __init__(self, users_Jobs, users_Jobs_Train, users_Jobs_Test, users, jobs):
         #print("this is the initializer!")
@@ -26,24 +26,21 @@ class MF(ir.IterativeRec):
 
         #Initializing matrix P.
         for user in self.Users:
-            #temp = 0.1 * (np.random.rand(self.num_factors) - 0.5)
             l = []
             for factor1 in range(self.num_factors):
-                l.append(random.uniform(0.45,0.55))
+                l.append(random.uniform(0, 1))
                 self.P[user] = np.array(l)
-                #self.P[(user, factor1)] = temp[factor1]
+                #self.P[user] = 0.1 * (np.random.rand(self.num_factors) - 0.5)
 
         #print(self.P[('id_11610047', 0)])
 
         # Initializing matrix Q.
         for job in self.Jobs:
-            #temp = 0.1 * (np.random.rand(self.num_factors) - 0.5)
             l = []
             for factor2 in range(self.num_factors):
-                l.append(random.uniform(0.45,0.55))
+                l.append(random.uniform(0, 1))
                 self.Q[job] = np.array(l)
-
-                #self.Q[(job, factor2)] = temp[factor2]
+                #self.Q[job] = 0.1 * (np.random.rand(self.num_factors) - 0.5)
 
         #print(self.Q[('id_50417156', 0)])
 

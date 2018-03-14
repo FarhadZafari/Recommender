@@ -9,9 +9,9 @@ class BMF(mf.MF):
     avg = 0
     bias_reg = 0.01
 
-    def __init__(self, users_Jobs, users_Jobs_Train, users_Jobs_Test, users, jobs):
+    def __init__(self, users_Jobs, users_Jobs_Train, users_Jobs_Test, users, jobs, users_train, users_test, jobs_train, jobs_test, users_jobs_train_hash, users_jobs_test_hash):
         #print("this is the initializer!")
-        super().__init__(users_Jobs, users_Jobs_Train, users_Jobs_Test, users, jobs)
+        super().__init__(users_Jobs, users_Jobs_Train, users_Jobs_Test, users, jobs, users_train, users_test, jobs_train, jobs_test, users_jobs_train_hash, users_jobs_test_hash)
 
         for user in self.Users:
             self.UserBias[user] = 0
@@ -35,7 +35,7 @@ class BMF(mf.MF):
         return self.real(user_id, job_id) - self.predict(user_id, job_id)
 
     def train(self):
-        print("Training the model started...")
+        print("Training BMF started...")
         for reps in range(self.max_learning_repeats):
             loss = 0
             for (user,job,value) in self.Users_Jobs_Train:
@@ -61,9 +61,10 @@ class BMF(mf.MF):
             #print(reps, loss)
 
 # reader = datareader.Read()
-# Users_Jobs, Users_Jobs_Train, Users_Jobs_Test, Users, Jobs = reader.readDataCSV()
-# bmf = BMF(Users_Jobs, Users_Jobs_Train, Users_Jobs_Test, Users, Jobs)
+# Users_Jobs, Users_Jobs_Train, Users_Jobs_Test, Users, Jobs, Users_train, Users_test, Jobs_train, Jobs_test, Users_Jobs_Train_Hash, Users_Jobs_Test_Hash = reader.readDataCSV()
+# bmf = BMF(Users_Jobs, Users_Jobs_Train, Users_Jobs_Test, Users, Jobs, Users_train, Users_test, Jobs_train, Jobs_test, Users_Jobs_Train_Hash, Users_Jobs_Test_Hash)
 # bmf.train()
+# bmf.ModelUserHit()
 # precision_test_BMF, recall_test_BMF, accuracy_test_BMF = bmf.ModelPrecisionRecallAccuracyTest()
 # print(precision_test_BMF, recall_test_BMF, accuracy_test_BMF)
 

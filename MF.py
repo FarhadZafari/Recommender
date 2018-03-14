@@ -1,22 +1,22 @@
 import ReadData as datareader
-import IterativeRec as ir
+import IterativeRec as it
 import random
 import numpy as np
 
 
-class MF(ir.IterativeRec):
+class MF(it.IterativeRec):
 
     P = {}
     Q = {}
-    num_factors = 5
+    num_factors = 10
     learningRate = 0.1
     user_reg = 0.01
     job_reg = 0.01
 
-    def __init__(self, users_Jobs, users_Jobs_Train, users_Jobs_Test, users, jobs):
-        #print("this is the initializer!")
+    def __init__(self, users_Jobs, users_jobs_train, users_jobs_test, users, jobs, users_train, users_test, jobs_train, jobs_test, users_jobs_train_hash, users_jobs_test_hash):
+        print("this is the initializer!")
 
-        super().__init__(users_Jobs, users_Jobs_Train, users_Jobs_Test, users, jobs)
+        super().__init__(users_Jobs, users_jobs_train, users_jobs_test, users, jobs, users_train, users_test, jobs_train, jobs_test, users_jobs_train_hash, users_jobs_test_hash)
 
         #print("training: ", self.Users_Jobs_Train)
         #print("size", len(self.Users_Jobs_Train))
@@ -57,6 +57,7 @@ class MF(ir.IterativeRec):
         return self.real(user_id, job_id) - self.predict(user_id, job_id)
 
     def train(self):
+        print("Training MF started...")
         for reps in range(self.max_learning_repeats):
             loss = 0
             for (user,job, value) in self.Users_Jobs_Train:
@@ -73,11 +74,10 @@ class MF(ir.IterativeRec):
             loss = loss / 2
             #print(reps, loss)
 
-#reader = datareader.Read()
-#Users_Jobs, Users_Jobs_Train, Users_Jobs_Test, Users, Jobs = reader.readDataCSV()
-#mf = MF(Users_Jobs, Users_Jobs_Train, Users_Jobs_Test, Users, Jobs)
-#mf.train()
-#precision_test_MF, recall_test_MF, accuracy_test_MF = mf.ModelPrecisionRecallAccuracyTest()
-#print(precision_test_MF, recall_test_MF, accuracy_test_MF)
+# reader = datareader.Read()
+# Users_Jobs, Users_Jobs_Train, Users_Jobs_Test, Users, Jobs, Users_train, Users_test, Jobs_train, Jobs_test, Users_Jobs_Train_Hash, Users_Jobs_Test_Hash = reader.readDataCSV()
+# mf = MF(Users_Jobs, Users_Jobs_Train, Users_Jobs_Test, Users, Jobs, Users_train, Users_test, Jobs_train, Jobs_test, Users_Jobs_Train_Hash, Users_Jobs_Test_Hash)
+# mf.train()
+# mf.ModelUserHit()
 
 

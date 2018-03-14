@@ -1,16 +1,25 @@
 import numpy as np
+import ReadData as datareader
+import operator
+
 
 class IterativeRec:
-    max_learning_repeats = 20
+    max_learning_repeats = 100
     Users_Jobs = []
     Users_Jobs_Train = []
     Users_Jobs_Test = []
+    Users_Jobs_Train_Hash = {}
+    Users_Jobs_Test_Hash = {}
     Users = set()
+    Users_train = set()
+    Users_test = set()
+    Jobs_train = set()
+    Jobs_test = set()
     Jobs = set()
 
-    def __init__(self, users_Jobs, users_Jobs_Train, users_Jobs_Test, users, jobs):
+    def __init__(self, users_Jobs, users_Jobs_Train, users_Jobs_Test, users, jobs, users_train, users_test, jobs_train, jobs_test, users_jobs_train_hash, users_jobs_test_hash):
         #print("this is the initializer!")
-        self.Users_Jobs, self.Users_Jobs_Train, self.Users_Jobs_Test, self.Users, self.Jobs = users_Jobs, users_Jobs_Train, users_Jobs_Test, users, jobs
+        self.Users_Jobs, self.Users_Jobs_Train, self.Users_Jobs_Test, self.Users, self.Jobs, self.Users_train, self.Users_test, self.Jobs_train, self.Jobs_test, self.Users_Jobs_Train_Hash, self.Users_Jobs_Test_Hash = users_Jobs, users_Jobs_Train, users_Jobs_Test, users, jobs, users_train, users_test, jobs_train, jobs_test, users_jobs_train_hash, users_jobs_test_hash
 
     def real(self, user_id, job_id):
         if (user_id,job_id, 0) in self.Users_Jobs:
@@ -89,35 +98,42 @@ class IterativeRec:
         accuracy = (TT + FF) / (TT + TF + FT + FF)
         return precision, recall, accuracy
 
-    def ModelUserHit(self):
-        #UserApply = {}
-        UserHit = {}
-        UserAll = {}
+    def ModelUserHit(self, num_top_recommendations = 5000):
+        #print("Number of users being tested in User Hit: " + str(self.Users_test))
+        #print("Number of jobs being tested in Jobs Hit: " + str(self.Jobs_test))
 
-        for user in self.Users:
-            #UserApply[user] = set()
-            UserAll[user] = set()
-            UserHit[user] = set()
+        TopJobsPerUserPred = {}
+        TopJobsPerUserReal = {}
+        for user in self.Users_test:
+            pred = {}
+            topjobsreal = set()
+            for job in self.Jobs_test:
+                pred[job] = self.predict(user,job)
+                if (user, job) in self.Users_Jobs_Test_Hash.keys():
+                    if self.Users_Jobs_Test_Hash[(user, job)] == 1:
+                        topjobsreal.add(job)
+            TopJobsPerUserReal[user] = topjobsreal
+            sorted_pred = sorted(pred.items(), key=operator.itemgetter(1))
+            topjobspred = set()
+            for (job,apply) in sorted_pred[len(sorted_pred) - num_top_recommendations: len(sorted_pred)]:
+                topjobspred.add(job)
+            TopJobsPerUserPred[user] = topjobspred
 
-        for (user, job, value) in self.Users_Jobs_Test:
-            if value == 1:
-                UserAll[user].add(job)
-                if self.predict(user,job) >= 0.5:
-                    #UserApply[user].add(job)
-                    UserHit[user].add(job)
-            if value == 0:
-                UserAll[user].add(job)
-                if self.predict(user, job) < 0.5:
-                    #UserApply[user].add(job)
-                    UserHit[user].add(job)
+        UserHits = {}
+        for user in TopJobsPerUserPred:
+            UserHits[user] = TopJobsPerUserPred[user].intersection(TopJobsPerUserReal[user])
 
-        #for user in UserAll.keys():
-        #    UserHit[user] = UserAll[user].intersection(UserApply[user])
+        hits = []
+        for user in UserHits.keys():
+            hits.append(len(UserHits.get(user)) / len(TopJobsPerUserPred[user]))
+        hit = np.mean(hits)
+        #print(hit)
+        return hit
 
-        HitsList = []
-        for user in self.Users:
-            if len(UserAll[user]) > 0:
-                HitsList.append(len(UserHit[user]) / len(UserAll[user]))
-
-        return np.mean(HitsList)
-
+# r = datareader.Read()
+# users_jobs, users_jobs_train, users_jobs_test, users, jobs, user_train, users_test, jobs_train, jobs_test  = r.readDataCSV()
+# print("done")
+# bmf = BMF(users_jobs, users_jobs_train, users_jobs_test, users, jobs, user_train, users_test, jobs_train, jobs_test)
+# bmf.train()
+# t = IterativeRec(users_jobs, users_jobs_train, users_jobs_test, users, jobs, user_train, users_test, jobs_train, jobs_test)
+# t.ModelUserHit()
